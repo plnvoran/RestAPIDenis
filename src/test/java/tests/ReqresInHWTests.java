@@ -1,7 +1,6 @@
 package tests;
 
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +11,7 @@ import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInC
 import static org.hamcrest.Matchers.*;
 
 public class ReqresInHWTests {
+
    @BeforeEach
    void setupUriAndPath() {
         RestAssured.baseURI = "https://reqres.in";
