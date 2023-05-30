@@ -13,7 +13,7 @@ import static org.hamcrest.Matchers.*;
 
 public class ReqresInHWTests {
    @BeforeEach
-   void setup() {
+   void setupUriAndPath() {
         RestAssured.baseURI = "https://reqres.in";
         RestAssured.basePath = "/api";
    }
