@@ -1,5 +1,8 @@
 package tests;
 
+import io.restassured.RestAssured;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -9,10 +12,16 @@ import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInC
 import static org.hamcrest.Matchers.*;
 
 public class ReqresInHWTests {
+   @BeforeEach
+   void setup() {
+        RestAssured.baseURI = "https://reqres.in";
+        RestAssured.basePath = "/api";
+   }
 
     @Test
-    @DisplayName("User has successfully {i} registered")
+    @DisplayName("User has successfully registered")
     void successfulRegistrationTest() {
+
         String requestBody = "{ \"email\": \"eve.holt@reqres.in\", \"password\": \"pistol\" }"; // BAD PRACTICE
 
         given()
@@ -21,7 +30,7 @@ public class ReqresInHWTests {
                 .contentType(JSON)
                 .body(requestBody)
                 .when()
-                .post("https://reqres.in/api/register")
+                .post("register")
                 .then()
                 .log().status()
                 .log().body()
@@ -41,7 +50,7 @@ public class ReqresInHWTests {
                 .contentType(JSON)
                 .body(requestBody)
                 .when()
-                .post("https://reqres.in/api/register")
+                .post("register")
                 .then()
                 .log().status()
                 .log().body()
@@ -57,7 +66,7 @@ public class ReqresInHWTests {
                 .log().uri()
                 .log().body()
                 .when()
-                .get("https://reqres.in/api/users?page=2")
+                .get("users?page=2")
                 .then()
                 .log().status()
                 .log().body()
@@ -77,7 +86,7 @@ public class ReqresInHWTests {
                 .contentType(JSON)
                 .body(requestBody)
                 .when()
-                .post("https://reqres.in/api/users")
+                .post("users")
                 .then()
                 .log().status()
                 .log().body()
@@ -94,7 +103,7 @@ public class ReqresInHWTests {
                 .log().body()
                 .contentType(JSON)
                 .when()
-                .get("https://reqres.in/api/unknown/23")
+                .get("unknown/23")
                 .then()
                 .log().status()
                 .log().body()
