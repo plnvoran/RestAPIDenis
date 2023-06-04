@@ -14,8 +14,8 @@ public class ReqresInHWTests {
 
     String userName = "school 5";
     String userJob = "teacher";
-    String userEmail = "teacher@reqres.in";
-    String userPassword = "teacher1980";
+    String userEmail = "eve.holt@reqres.in";
+    String userPassword = "pistol";
 
     @Test
     @DisplayName("User has successfully registered")
