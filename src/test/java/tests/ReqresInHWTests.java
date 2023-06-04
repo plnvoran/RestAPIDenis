@@ -1,112 +1,121 @@
 package tests;
 
-import io.restassured.RestAssured;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tests.models.*;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
-import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static tests.specs.Specs.*;
 
 public class ReqresInHWTests {
 
-   @BeforeEach
-   void setupUriAndPath() {
-        RestAssured.baseURI = "https://reqres.in";
-        RestAssured.basePath = "/api";
-   }
+    String userName = "school 5";
+    String userJob = "teacher";
+    String userEmail = "teacher@reqres.in";
+    String userPassword = "teacher1980";
 
     @Test
     @DisplayName("User has successfully registered")
-    void successfulRegistrationTest() {
+    void successfulRegisterTest() {
+        RegisterBody requestBody = new RegisterBody();
+        requestBody.setEmail(userEmail);
+        requestBody.setPassword(userPassword);
 
-        String requestBody = "{ \"email\": \"eve.holt@reqres.in\", \"password\": \"pistol\" }"; // BAD PRACTICE
-
-        given()
-                .log().uri()
-                .log().body()
-                .contentType(JSON)
+        RegisterResponse response = step("Make the request", () -> given(requestSpec)
                 .body(requestBody)
                 .when()
-                .post("register")
+                .post("/register")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .body("id", is(4))
-                .body("token", is("QpwL5tke4Pnpja7X4"));
+                .spec(response200Spec)
+                .extract().as(RegisterResponse.class));
+
+        step("Check user ID in response", () ->
+                assertThat(response.getId()).isNotNull());
+
+        step("Check token in response", () ->
+                assertThat(response.getToken()).isNotNull());
     }
 
     @Test
     @DisplayName("User has registered unsuccessfully")
     void unsuccessfulRegistrationTest() {
-        String requestBody = "{ \"email\": \"eve.holt@reqres.in\"}"; // BAD PRACTICE
+        RegisterBodyWithoutPassword registerBodyWithoutPassword = new RegisterBodyWithoutPassword();
+        registerBodyWithoutPassword.setEmail(userEmail);
+        String expectedResponse = "Missing password";
 
-        given()
-                .log().uri()
-                .log().body()
-                .contentType(JSON)
-                .body(requestBody)
+        BadRequestResponse response = step("Make the request", () -> given(requestSpec)
+                .body(registerBodyWithoutPassword)
                 .when()
-                .post("register")
+                .post("/register")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(400)
-                .body("error", is("Missing password"));
+                .spec(response400Spec)
+                .extract().as(BadRequestResponse.class));
+
+        step("Check the error message in the response", () ->
+                assertThat(response.getError()).isEqualTo(expectedResponse));
 
     }
 
     @Test
-    @DisplayName("Display page 2 of the user list and check its structure")
-    void checkStructureOfUserListTest() {
-        given()
-                .log().uri()
-                .log().body()
-                .when()
-                .get("users?page=2")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .body(matchesJsonSchemaInClasspath("schemes/list-users-response-scheme.json"));
+    @DisplayName("Display page 2 of the user list and check user ids")
+    void checkListUserIdsTest() {
+        Integer expectedFirstUserId = 7;
+        Integer expectedLastUserId = 12;
+        Integer expectedListSize = 6;
 
+        UsersResponse response = step("Make the request", () -> given(requestSpec)
+                .when()
+                .get("/users?page=2")
+                .then()
+                .spec(response200Spec)
+                .extract().as(UsersResponse.class));
+
+        step("Check ID for first user in the response", () ->
+                assertThat(response.getData().getFirst().getId()).isEqualTo(expectedFirstUserId));
+
+        step("Check the size of the list", () ->
+                assertEquals(expectedListSize, response.getData().size()));
+
+        step("Check ID for last user in the response", () ->
+                assertThat(response.getData().getLast().getId()).isEqualTo(expectedLastUserId));
     }
 
     @Test
     @DisplayName("Successful user creation")
     void successfulUserCreationTest() {
-        String requestBody = "{ \"name\": \"john\", \"job\": \"shop55\" }"; // BAD PRACTICE
+        CreateUserBody requestBody = new CreateUserBody();
+        requestBody.setName(userName);
+        requestBody.setJob(userJob);
 
-        given()
-                .log().uri()
-                .log().body()
-                .contentType(JSON)
+        CreateUserResponse response = step("Make the request", () -> given(requestSpec)
                 .body(requestBody)
                 .when()
-                .post("users")
+                .post("/users")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(201)
-                .body("name", is("john"))
-                .body("job", is("shop55"));
+                .spec(response201Spec)
+                .extract().as(CreateUserResponse.class));
+
+        step("Check user name in the response", () ->
+                assertThat(response.getName()).isEqualTo(userName));
+
+        step("Check user job in the response", () ->
+                assertThat(response.getJob()).isEqualTo(userJob));
     }
 
     @Test
     @DisplayName("Checking for sending an unknown request")
     void unknownRequestTest() {
-        given()
-                .log().uri()
-                .log().body()
-                .contentType(JSON)
+        BadRequestResponse response = step("Make the request", () -> given(requestSpec)
                 .when()
                 .get("unknown/23")
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(404);
+                .spec(response404Spec)
+                .extract().as(BadRequestResponse.class));
+
+        step("Check the error in the response", () ->
+                assertThat(response.getError()).isNull());
     }
 }
